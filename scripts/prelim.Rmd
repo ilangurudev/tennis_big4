@@ -41,6 +41,20 @@ tennis %>%
   coord_flip() +
   scale_y_continuous(breaks = seq(1,20,1)) +
   scale_fill_manual(values = c("darkgoldenrod2", "coral3", "blue3", "chartreuse4")) +
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+
+
+tennis %>%
+  filter(Round == "Semifinals") %>%
+  mutate(Winner = fct_rev(fct_infreq(Winner, ordered = T))) %>% 
+  ggplot(aes(Winner, fill = Tournament)) +
+  geom_bar() +
+  coord_flip() +
+  scale_fill_manual(values = c("darkgoldenrod2", "coral3", "blue3", "chartreuse4")) +
   theme_minimal() 
 
 ```
