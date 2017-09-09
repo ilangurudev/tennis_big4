@@ -12,11 +12,11 @@ library(purrr)
 library(stringr)
 library(forcats)
 
-tennis <- 
-  map(1:67, function(x){
-    read_csv(paste0("./data/all/all_renamed/z (",x,").csv"), col_types = cols(.default = "c")) %>%
-      select(Tournament, Date, Surface, Round, Winner, Loser, WRank, LRank, Wsets, Lsets)
-  }) %>% bind_rows()
+# tennis <- 
+#   map(1:67, function(x){
+#     read_csv(paste0("./data/all/all_renamed/z (",x,").csv"), col_types = cols(.default = "c")) %>%
+#       select(Tournament, Date, Surface, Round, Winner, Loser, WRank, LRank, Wsets, Lsets)
+#   }) %>% bind_rows()
 
 
 # tennis <- 
@@ -27,9 +27,9 @@ tennis <-
 # 
 
 
-tennis <- 
-  tennis %>% 
-    mutate(Year = str_c("20",str_sub(Date, -2,-1)))
+# tennis <- 
+#   tennis %>% 
+#     mutate(Year = str_c("20",str_sub(Date, -2,-1)))
 
 
 
@@ -38,6 +38,7 @@ tennis %>%
   mutate(Winner = fct_rev(fct_infreq(Winner, ordered = T))) %>% 
   ggplot(aes(Winner, fill = Tournament)) +
   geom_bar() +
+  geom_text(aes(y = ..count..)) +
   coord_flip() +
   scale_y_continuous(breaks = seq(1,20,1)) +
   scale_fill_manual(values = c("darkgoldenrod2", "coral3", "blue3", "chartreuse4")) +
