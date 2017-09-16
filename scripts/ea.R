@@ -3,6 +3,7 @@ library(magrittr)
 library(purrr)
 library(stringr)
 library(forcats)
+library(plotly)
 
 
 
@@ -114,3 +115,28 @@ df_tennis %>%
 
 
 gganimate::gganimate(p,"output.gif")
+
+
+
+p <- 
+  grand_slam_wins %>%
+  arrange(year) %>% 
+  group_by(winner_name) %>%
+  mutate(n = n()) %>%
+  filter(n>3) %>% 
+  mutate(slam = 1,
+         slams_until = cumsum(slam)) %>% 
+  ggplot(aes(x = year, y = slams_until)) +
+  geom_path(lwd = 1, aes(group = winner_name, col = winner_name, cumulative = TRUE)) +
+  scale_x_continuous(breaks = seq(1967,2017,5), labels = seq(1967,2017,5)) +
+  scale_y_continuous(breaks = seq(1,20,3), labels = seq(1,20,3)) +
+  labs(x = "Year", 
+       y = "Cumulative number of slams won") +
+  theme_minimal()
+
+pl <- plotly::ggplotly(p)
+# plotly_POST(pl)
+
+htmlwidgets::saveWidget(as_widget(pl), "chart.html")
+
+gganimate::gganimate(p)

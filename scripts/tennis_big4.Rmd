@@ -39,7 +39,7 @@ grand_slam_wins <- df_tennis %>%
 
 Tennis has always had greats in every era. Why then is this era called as **golden era in tennis**? More specifically, why is the quartet of Roger Federer, Rafael Nadal, Novak Djokovic and Andy Murray called as the *big four*?  
 
-First let's take a customary look at the slam counts for players with more than 2 slams. 
+First let's take a customary look at the slam counts for players with more than 2 slams. The bars are color coded based on the 10 year periods starting from 2017 and going back all teh way down to 1967. 
 
 ```{r echo=FALSE}
 grand_slam_wins %>%
@@ -57,7 +57,31 @@ grand_slam_wins %>%
             panel.grid.major.y = element_blank(),
             panel.grid.minor.y = element_blank())
 
+# fill = fct_rev(factor(year_aggregated)))) +
 # scale_fill_manual(values = c("darkgoldenrod2", "coral3", "blue3", "chartreuse4")) +
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+In this plot, we can see that pink seems to be distributed across many players, all greats - Borg, Lendl, Connors, McEnroe, Wilander, Becker, Edberg and Vilas. The distribution of slams winners is also not adverse. Of course one could argue that that the ten years have been selected to make it seem like the big 4 are dominant. But hey, look at the lengths of the bars. Top 4 all time winners list has 3 from the big 4. 
+<!-- simplified fill chart explaining number of slams won by top 4  -->
+
+Take green for instance (67 - 77). We see that it's spread across many players, only one of them (Borg) winning 6 or more slams. 
+<!-- why not do a statistical analysis that give p-values to prove the same stuff -->
+
+Bjorn Borg was to 67-77 => pete was to 87 - 97 => fed was to 97 - 07
+Weak era argument? Jeff Sackman's article.  
+
+But slams tell only one part of the story. They are after all 4 events in a year and judging the state of things by them alone doesn't do justice.  So let's also consider Masters tournaments. In fact, without considering masters, it would just be **Big 3**. Andy Murray's exceptional success outside of the slams explains why it's *Big 4*.
+
+
+<!-- Insert chart here for M1000 -->
+
+<!-- similarly for all titles -->
+
+
+
+What other metrics are there? We have 
+ - prize money
+ - wins/titles to find out chokers(lower the better if we consider people with more than said wins/titles)
+ - #weeks as world number #s
+
+What is amazing is that tennis has gotten faster, more powerful and more taxing over the ages and going by the trend, it will only become more so. This means that tennis is increasingly becoming a young man's game, sapping the players, pushing the envelope when it comes to their conditioning and causing a lot of injuries. Despite all that, here they are atop their thrones, old but hungry as ever.  
