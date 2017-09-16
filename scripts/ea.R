@@ -8,7 +8,7 @@ library(forcats)
 
 df_tennis <- read_csv("./data/atp_matches_all.csv")
 
-nplayers <- 2
+nplayers <- 4
 years_to_aggregate <- 10
 y_now <- 2017
 y_beg <- 1920
@@ -50,9 +50,10 @@ topn_lookup <-
     group_by(year_aggregated) %>% 
     select(year_aggregated,winner_name, num_won) %>%
     unique() %>% 
-    mutate(top_nplayers = if_else(num_won >= sort(num_won, partial = n() - nplayers -1)[n() - nplayers -1], T, F)) 
+    mutate(top_nplayers = if_else(num_won >= sort(num_won, partial = n() - nplayers + 1)[n() - nplayers + 1], T, F)) 
 
  
+
 grand_slam_wins %>%
     left_join(topn_lookup) %>%
       ggplot(aes(x = year_aggregated, fill = top_nplayers)) + 
@@ -61,14 +62,55 @@ grand_slam_wins %>%
 
 
 
-df_tennis %>%
-  filter(year > 2002) %>% 
-  group_by(winner_name) %>%
-    mutate(matches_won = n()) %>%
-      ungroup() %>%
+total_matches_won <- 
+  df_tennis %>%
+    filter(year > 2002 & year < 2017) %>% 
+    group_by(winner_name) %>%
+      mutate(matches_won = n()) %>%
+        ungroup()
+
+# filter(matches_won <= 700) %>%
+
+others <- 
+  total_matches_won %>%
+    group_by(year, winner_name) %>% 
+    mutate(matches_won = n()) %>% 
+    ungroup() %>% 
+    group_by(year) %>% 
+    summarise(matches_won = mean(matches_won)) %>% 
+    mutate(winner_name = "Rest")
+
+total_matches_won %>%
         filter(matches_won > 700) %>%
   group_by(year, winner_name) %>% 
   mutate(matches_won = n()) %>%
-    ggplot(aes(year, matches_won, col = winner_name)) + 
-  geom_line(lwd = 1.5)
+    ggplot(aes(year, matches_won)) + 
+  geom_line(aes(col = winner_name), lwd = 1.5) + 
+  theme_minimal() +
+  geom_line(data = others, aes(year, matches_won, col = "Other Players"), lwd = 1.5) +
+  scale_colour_manual(values = c("Roger Federer" = "chartreuse4", "Rafael Nadal" = "coral3", 
+                                 "Novak Djokovic" = "blue3", "Other Players" = "grey"))
   
+
+
+
+p <- 
+df_tennis %>%
+  gather(result,player, winner_name,loser_name) %>%
+  mutate(result = str_extract(result, "[a-z]")) %>%
+  filter(player %in% c("Roger Federer", "Novak Djokovic", "Rafael Nadal")) %>%
+  group_by(player) %>%
+  arrange(tourney_date, match_num) %>%
+  mutate(match_num_i = row_number(),
+         running_win_mean = cummean(result == "w")) %>%
+  ggplot(aes(x = match_num_i, y = running_win_mean, frame = year)) +
+  geom_path(lwd = 1, aes(group = player, col = player, cumulative = TRUE)) +
+  labs(x = "Match Number", 
+       y = "Running match win percent", 
+       title = "Matches Vs Win Percent") +
+  xlim(c(20, 1200)) +
+  scale_y_continuous(labels = scales::percent) +                   
+  theme_minimal()
+
+
+gganimate::gganimate(p,"output.gif")
