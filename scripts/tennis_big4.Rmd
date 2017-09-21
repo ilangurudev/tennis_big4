@@ -1,6 +1,8 @@
 ---
 title: "How big are the big 4?"
-author: "Gurudev Ilangovan"
+author:
+- Gurudev Ilangovan
+- Sibi Rajendran
 date: "September 15, 2017"
 output: html_document
 ---
@@ -11,11 +13,10 @@ library(purrr)
 library(stringr)
 library(forcats)
 
+# df_tennis <- read_csv("./data/atp_matches_all_new_2.csv")
+df_tennis <- read_csv("../data/atp_matches_all_new_2.csv")
 
-
-df_tennis <- read_csv("../data/atp_matches_all.csv")
-
-nplayers <- 4
+nplayers <- 3
 years_to_aggregate <- 10
 y_now <- 2017
 y_beg <- 1920
@@ -34,12 +35,48 @@ df_tennis <-
 
 grand_slam_wins <- df_tennis %>%
   filter(tourney_level == "G" & round == "F") 
+
+knitr::opts_chunk$set(dpi=100, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE, linewidth=80, fig.align = "center")
 ```
 
+We all know tennis is a competitive sport. Winning one slam is hard and that's probably enough. In the chart below, you might recognize a few rectangles in the far right. Roger Federer with 19, Rafa with 16 and so on. But try to recollect five people in the left hand side - people who've won just one slam. 
 
-Tennis has always had greats in every era. Why then is this era called as **golden era in tennis**? More specifically, why is the quartet of Roger Federer, Rafael Nadal, Novak Djokovic and Andy Murray called as the *big four*?  
+```{r}
+grand_slam_wins %>%
+  count(winner_name) %>% 
+  ggplot(aes(n)) +
+  geom_bar() +
+  scale_x_continuous(breaks = 1:20) +
+  theme_minimal() +
+  labs(x = "Number of grand slams won", y = "Number of people who've won n grand slams")
+```
 
-First let's take a customary look at the slam counts for players with more than 2 slams. The bars are color coded based on the 10 year periods starting from 2017 and going back all teh way down to 1967. 
+Pretty hard, right? We don't remember many of them in the left. But did you notice that the axis starts from 1? What happens if we start from 0?
+
+```{r}
+never_won <- (df_tennis %>%
+  filter(tourney_level == "G") %>%
+  pull(loser_name) %>%
+  setdiff(grand_slam_wins %>%
+            pull(winner_name)) %>%
+  length())
+
+grand_slam_wins %>%
+  count(winner_name) %>% 
+  bind_rows(tibble(winner_name = rep("never won",never_won), n = 0)) %>% 
+  ggplot(aes(n)) +
+  geom_bar() +
+  theme_minimal() +
+  scale_x_continuous(breaks = 0:20) +
+  labs(x = "Number of grand slams won", y = "Number of people who've won n grand slams")
+```
+
+What just happened? The huge bar is all the people who compete but never win a slam in their entire careers. The 1 which had a big bar is dwarfed. Tennis isn't competitive. It's cruel. If you meet a player today who says they are going to take tennis up as a profession, odds are that they would be slam-less if you meet them after fifteen years. So now that we've seen how insanely brutal the competition is, we know hard it is to win a single slam. It *is* a big deal. And 3 people, over the course of 15 years have won 47. You read that right. Enter the big 3. 
+
+
+Tennis has always had greats in every era. Why then is this era called as *golden era in tennis*? More specifically, why is the quartet of Roger Federer, Rafael Nadal, Novak Djokovic and Andy Murray called as the *big four*?  
+
+First let's take a customary look at the slam counts for players with more than 2 slams. The bars are color coded based on the 10 year periods starting from 2017 and going back all the way down to 1968. 
 
 ```{r echo=FALSE}
 grand_slam_wins %>%
@@ -50,10 +87,14 @@ grand_slam_wins %>%
                fill = fct_rev(factor(year_aggregated)))) +
       geom_bar() +
       coord_flip() +
-      scale_y_continuous(breaks = seq(1,20,1)) +
+      scale_y_continuous(breaks = seq(0,20,1)) +
       scale_fill_brewer(palette = "Dark2") +
       theme_minimal() +
-      theme(panel.grid.minor.x = element_blank(),
+      labs(y = "Number of slams won") + 
+      guides(fill = guide_legend(title = "Period")) +
+      theme(axis.title.y = element_blank(),
+            axis.text.y = element_text(size = 10),
+            panel.grid.minor.x = element_blank(),
             panel.grid.major.y = element_blank(),
             panel.grid.minor.y = element_blank())
 
@@ -61,27 +102,142 @@ grand_slam_wins %>%
 # scale_fill_manual(values = c("darkgoldenrod2", "coral3", "blue3", "chartreuse4")) +
 ```
 
-In this plot, we can see that pink seems to be distributed across many players, all greats - Borg, Lendl, Connors, McEnroe, Wilander, Becker, Edberg and Vilas. The distribution of slams winners is also not adverse. Of course one could argue that that the ten years have been selected to make it seem like the big 4 are dominant. But hey, look at the lengths of the bars. Top 4 all time winners list has 3 from the big 4. 
+Apart from the fact that 3 in the top 4 slam winners are from the *"golden era"*, we can see that the darkgreen is pretty much split between Roger, Rafa and Novak. The other colors (say pink) are much more distributed. In terms of number of grand slams, it's clearly big 3.
+
+<!-- In this plot, we can see that pink seems to be distributed across many players, all greats - Borg, Lendl, Connors, McEnroe, Wilander, Becker, Edberg and Vilas. The distribution of slams winners is also not adverse. Of course one could argue that that the ten years have been selected to make it seem like the big 4 are dominant. But hey, look at the lengths of the bars. Top 4 all time winners list has 3 from the big 4.  -->
+
 <!-- simplified fill chart explaining number of slams won by top 4  -->
 
-Take green for instance (67 - 77). We see that it's spread across many players, only one of them (Borg) winning 6 or more slams. 
-<!-- why not do a statistical analysis that give p-values to prove the same stuff -->
+Let's take a simplified version of this idea.
 
-Bjorn Borg was to 67-77 => pete was to 87 - 97 => fed was to 97 - 07
-Weak era argument? Jeff Sackman's article.  
+1. Aggregate 1968 - 2017 into 5 10-year periods.   
+2. For each period, calculate the who the top 3 players are. 
+3. Calculate the proportion of slams won by the top 3
+```{r}
+topn_lookup <- 
+  grand_slam_wins %>%
+    group_by(year_aggregated, winner_name) %>%
+    mutate(num_won = n()) %>%
+    ungroup() %>%
+    group_by(year_aggregated) %>% 
+    select(year_aggregated,winner_name, num_won) %>%
+    unique() %>% 
+    mutate(top_nplayers = if_else(num_won >= sort(num_won, partial = n() - nplayers + 1)[n() - nplayers + 1], T, F)) 
 
-But slams tell only one part of the story. They are after all 4 events in a year and judging the state of things by them alone doesn't do justice.  So let's also consider Masters tournaments. In fact, without considering masters, it would just be **Big 3**. Andy Murray's exceptional success outside of the slams explains why it's *Big 4*.
+ 
+
+grand_slam_wins %>%
+  left_join(topn_lookup) %>%
+  ggplot(aes(x = year_aggregated, fill = ifelse(top_nplayers, "Top 3 players", "Rest"))) + 
+  geom_bar(position = "fill") +
+  scale_y_continuous(breaks = seq(0,1,.25), labels = scales::percent) +
+  theme_minimal() +
+  guides(fill = guide_legend(title = element_blank())) +
+  labs(x = "Period", y = "Proportion of slams")
+
+```
+
+Clearly, 2007 - 2017 has a higher proportion of big winners! That's over a 25% gap. But an argument could be made for the way the years have been aggregated. It could be that 2007 - 2017 is where the big 3 dominated. But cutting greats' careers in half would be doing disservice to their dominance. For instance, Connors played from 1972 to the 90s. His career would be split if we aggregate the years from 1977 - 1987 The proper thing to do would be to find out the most dominant 10 years in the big 3's long careers and compare it with another 10 year period where 3 superior players have dominated the sport.  
+
+So let's for each year from 1968, let's aggregate 10 following years. That means 1968 - 1977 would be a 10 year aggregation, 1969 - 1978 would be another and so on. For each aggreation, let's calculate the average number of slams won by the top 3 players. 
+
+```{r}
+top_n <- 3
+n_years <- 10
+n_start <- 1968
+n_end <- 2017
+year_start <- n_start:(n_end - n_years)
 
 
-<!-- Insert chart here for M1000 -->
+most_dominant_periods <- 
+  map(year_start,function(x){
+    df_tennis %>% 
+      filter(year >= x & year < (x + n_years)) %>%
+        filter(tourney_level == "G" & round == "F") %>%
+          count(winner_name) %>%
+            mutate(year = x) %>% 
+            arrange(desc(n)) %>% 
+             top_n(top_n,n) %>% 
+               summarise(year = min(year), avg_slams = mean(n))
+  }) %>%
+    bind_rows()
+  
+most_dominant_periods %>%
+  arrange(desc(avg_slams)) %>%
+    print(n = 10)
+```
 
-<!-- similarly for all titles -->
+Just out of curiosity, just how many of these aggregations are connected to the big 3?
+```{r, fig.height = 8, fig.width = 10}
+most_dominant_periods %>%
+  arrange(desc(avg_slams)) %>%
+  ggplot(aes(x = fct_rev(fct_inorder(as.character(paste0(year," - ",year + 9)))), 
+             y = avg_slams, 
+             fill = fct_rev(ifelse(year>=1996, "Golden Era", "Regular Era?")))) +
+  geom_bar(stat = "identity") +
+  coord_flip() + 
+  theme_minimal() +
+  guides(fill = guide_legend(title = element_blank())) +
+  labs(x = "Year", y = "Mean number of slams won by a top 3 player")
+```
+In the top 10 aggregations, 8 feature the big 3. Staggering. 
 
 
+But coming back to the point, the next most dominant era has been 1974 - 1983. So we *have* been splitting the years wrong. A little. 
 
-What other metrics are there? We have 
- - prize money
- - wins/titles to find out chokers(lower the better if we consider people with more than said wins/titles)
- - #weeks as world number #s
+Let's take a look at the winners. 
+```{r}
+x <- 1974
+df_tennis %>% 
+  filter(year >= x & year < (x + n_years)) %>%
+  filter(tourney_level == "G" & round == "F") %>%
+  count(winner_name) %>%
+    arrange(desc(n))
+```
+An average of 7.67 slams won by each member of the top 3. A total of 14 grand slam winners.
 
-What is amazing is that tennis has gotten faster, more powerful and more taxing over the ages and going by the trend, it will only become more so. This means that tennis is increasingly becoming a young man's game, sapping the players, pushing the envelope when it comes to their conditioning and causing a lot of injuries. Despite all that, here they are atop their thrones, old but hungry as ever.  
+Now let's take a look at the iron grip of the big 3. 
+```{r}
+x <- 2004
+df_tennis %>% 
+  filter(year >= x & year < (x + n_years)) %>%
+  filter(tourney_level == "G" & round == "F") %>%
+  count(winner_name) %>%
+    arrange(desc(n))
+```
+
+An average of 11.67 slams - a solid year's worth of slams more than the next best era. A total of 7 winners (only half as much as the 1974 - 1983). The big 3 are significantly better than the 3 biggest players of any other period, period.
+
+So, how did the term "Big 4" come up? Andy Murray has won 3 slams and so has Stan Wawrinka. Why does he get to sit alongside these freaks?
+
+Because slams tell only one part of the story. They are after all 4 events in a year and judging the state of things by them alone doesn't do justice.  So let's also consider Masters 1000 tournaments, the most prestigious tournaments after Grand slams and Olympics. Andy Murray's exceptional success outside of the slams explains why it's *Big 4*. 
+
+
+```{r}
+df_tennis %>%
+  filter((tourney_level == "M" & round == "F")) %>%
+  group_by(winner_name) %>%
+    mutate(n = n()) %>%
+      filter(n>10) %>% 
+    ggplot(aes(fct_rev(fct_infreq(winner_name, ordered = T)), 
+               fill = fct_rev(factor(year_aggregated)))) +
+      geom_bar() +
+      coord_flip() +
+      scale_fill_brewer(palette = "Dark2") +
+      theme_minimal() +
+      theme(axis.title.y = element_blank(),
+            panel.grid.minor.x = element_blank(),
+            panel.grid.major.y = element_blank(),
+            panel.grid.minor.y = element_blank()) +
+      guides(fill = guide_legend(title = "Period")) +   
+      labs(y = "Number of Masters 1000 titles")
+
+```
+Andy's a freak in his own right. He's right there amongst the greats. If Andy had played in any other era, he would probably be having 10 slams. So it's not unjustified to call it the era of Big 4.
+
+<!-- What other metrics are there? We have  -->
+<!--  - prize money -->
+<!--  - wins/titles to find out chokers(lower the better if we consider people with more than said wins/titles) -->
+<!--  - #weeks as world number #s -->
+
+What is amazing is that tennis has gotten faster, more powerful and more taxing over the ages and going by the trend, it will only become more so. This means that tennis is increasingly becoming a young man's game, sapping the players, pushing the envelope when it comes to their conditioning and due that very reason causing a lot of injuries. Despite all that, here they are atop their thrones, old but hungry as ever, making unsuspecting analyses like this one outdated every passing year. 
